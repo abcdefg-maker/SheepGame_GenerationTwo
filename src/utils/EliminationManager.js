@@ -11,15 +11,20 @@ export default class EliminationManager {
         const { elimination } = config;
         const slots = scene.eliminationSlots;
 
+        // 计算有效槽位数量（排除正在消除的卡牌）
+        const activeCards = slots.filter(c => !c.isRemoved);
+        const actualIndex = activeCards.length;
+
         console.log('[消除] 添加卡牌到槽位:', {
             cardType: card.cardType,
-            当前槽位数量: slots.length,
+            槽位总数: slots.length,
+            有效槽位数: actualIndex,
             最大容量: elimination.maxSlots
         });
 
-        // 检查是否已满
-        if (slots.length >= elimination.maxSlots) {
-            console.log('[消除] 槽位已满，无法添加');
+        // 检查有效槽位是否已满
+        if (actualIndex >= elimination.maxSlots) {
+            console.log('[消除] 有效槽位已满，无法添加');
             return false;
         }
 
@@ -27,8 +32,8 @@ export default class EliminationManager {
         slots.push(card);
         console.log('[消除] 卡牌已添加，新槽位数量:', slots.length);
 
-        // 移动卡牌到对应槽位
-        this.moveCardToSlot(card, slots.length - 1, scene, config);
+        // 移动卡牌到实际的有效位置
+        this.moveCardToSlot(card, actualIndex, scene, config);
 
         // 更新标题计数
         this.updateSlotCountDisplay(scene);
