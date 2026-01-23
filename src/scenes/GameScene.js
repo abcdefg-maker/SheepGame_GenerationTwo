@@ -34,10 +34,31 @@ export default class GameScene extends Phaser.Scene {
         // 初始化消除槽
         this.eliminationSlots = [];  // 消除槽中的卡牌
         this.slotSprites = [];        // 消除槽UI元素
+
+        // 初始化分数
+        this.score = 0;
     }
 
     preload() {
-        // 预加载资源
+        // 预加载卡牌图片
+        const { cardTypes, cardImagePath } = gameConfig.card;
+
+        cardTypes.forEach((type, index) => {
+            const imageFile = typeof type === 'string' ? `card_0${index + 1}.png` : type.image;
+            const imagePath = cardImagePath + imageFile;
+
+            // 使用id或索引作为key
+            const key = typeof type === 'string' ? `card_${index}` : type.id;
+
+            // 监听加载失败
+            this.load.on('loaderror', (file) => {
+                if (file.key === key) {
+                    console.warn(`[图片加载失败] ${imagePath}, 将使用emoji降级显示`);
+                }
+            });
+
+            this.load.image(key, imagePath);
+        });
     }
 
     create() {
@@ -69,7 +90,7 @@ export default class GameScene extends Phaser.Scene {
                 this.scene.start('GameOverScene', {
                     level: this.currentLevel,
                     difficulty: this.difficulty,
-                    score: 0,
+                    score: this.score || 0,
                     isWin: false
                 });
             }
@@ -292,13 +313,13 @@ export default class GameScene extends Phaser.Scene {
         });
 
         // 分数信息
-        const scoreText = this.add.text(infoBar.width - 30, 30, '分数: 0', {
+        this.scoreText = this.add.text(infoBar.width - 30, 30, '分数: 0', {
             fontSize: '28px',
             color: '#FFFFFF',
             fontFamily: gameConfig.fonts.primary,
             fontStyle: 'bold'
         });
-        scoreText.setOrigin(1, 0);
+        this.scoreText.setOrigin(1, 0);
 
         // 时间信息
         const timeText = this.add.text(infoBar.width - 30, 70, '时间: 00:00', {
@@ -478,6 +499,17 @@ export default class GameScene extends Phaser.Scene {
         });
 
         return { button, buttonText };
+    }
+
+    /**
+     * 更新分数显示
+     */
+    updateScore(points) {
+        this.score += points;
+        if (this.scoreText) {
+            this.scoreText.setText(`分数: ${this.score}`);
+        }
+        console.log('[GameScene] 分数更新:', this.score);
     }
 
     update() {

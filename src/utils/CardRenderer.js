@@ -25,16 +25,41 @@ export default class CardRenderer {
         sprite.setDepth(initialDepth);
         card.depth = initialDepth;
 
-        // 添加卡牌类型文字
+        // 添加卡牌类型图片或文字
         if (card.cardType) {
-            const text = scene.add.text(card.x, card.y, card.cardType, {
-                fontSize: '32px',
-                fontFamily: 'Arial'
-            });
-            text.setOrigin(0.5);
-            text.setDepth(initialDepth + 1);
+            // 获取图片key
+            const imageKey = typeof card.cardType === 'string'
+                ? card.cardType  // 兼容旧的emoji字符串
+                : card.cardType.id;
 
-            card.text = text;
+            // 检查图片是否加载成功
+            if (scene.textures.exists(imageKey)) {
+                // 使用图片
+                const image = scene.add.image(card.x, card.y, imageKey);
+                image.setOrigin(0.5);
+                image.setDepth(initialDepth + 1);
+
+                // 应用缩放
+                const imageScale = config.cardImageScale || 0.5;
+                image.setScale(imageScale);
+
+                // 保存引用(替代原来的card.text)
+                card.image = image;
+                card.text = image;  // 兼容性,保持接口一致
+            } else {
+                // 降级到emoji文字
+                const emoji = typeof card.cardType === 'string'
+                    ? card.cardType
+                    : card.cardType.emoji;
+                const text = scene.add.text(card.x, card.y, emoji, {
+                    fontSize: '32px',
+                    fontFamily: 'Arial'
+                });
+                text.setOrigin(0.5);
+                text.setDepth(initialDepth + 1);
+                card.text = text;
+                console.warn(`[降级显示] 使用emoji ${emoji} 替代图片`);
+            }
         }
 
         // 应用初始视觉状态
@@ -57,6 +82,12 @@ export default class CardRenderer {
             sprite.setScale(state.scale);
             sprite.setFillStyle(state.tint);  // Rectangle使用setFillStyle而非setTint
             sprite.setStrokeStyle(state.strokeWidth, state.strokeColor);
+
+            // 更新图片状态
+            if (card.image) {
+                card.image.setTint(state.imageTint);
+                card.image.setAlpha(state.imageAlpha);
+            }
         } else {
             // 被锁状态
             const state = visual.locked;
@@ -64,6 +95,12 @@ export default class CardRenderer {
             sprite.setScale(state.scale);
             sprite.setFillStyle(state.tint);  // Rectangle使用setFillStyle而非setTint
             sprite.setStrokeStyle(state.strokeWidth, state.strokeColor);
+
+            // 更新图片状态（添加灰色滤镜）
+            if (card.image) {
+                card.image.setTint(state.imageTint);
+                card.image.setAlpha(state.imageAlpha);
+            }
         }
     }
 
@@ -97,6 +134,12 @@ export default class CardRenderer {
                 // 应用解锁视觉状态
                 sprite.setStrokeStyle(visual.unlocked.strokeWidth, visual.unlocked.strokeColor);
                 sprite.setFillStyle(visual.unlocked.tint);  // Rectangle使用setFillStyle
+
+                // 更新图片状态（恢复正常颜色）
+                if (card.image) {
+                    card.image.setTint(visual.unlocked.imageTint);
+                    card.image.setAlpha(visual.unlocked.imageAlpha);
+                }
             },
             onComplete: () => {
                 // 添加轻微呼吸动画
@@ -128,22 +171,34 @@ export default class CardRenderer {
     /**
      * 应用悬停效果
      */
-    static applyHoverEffect(sprite, config) {
+    static applyHoverEffect(sprite, card, config) {
         const { visual } = config;
         const state = visual.hover;
 
         sprite.setScale(state.scale);
         sprite.setStrokeStyle(state.strokeWidth, state.strokeColor);
+
+        // 图片也应用悬停效果
+        if (card && card.image) {
+            card.image.setTint(state.imageTint);
+            card.image.setAlpha(state.imageAlpha);
+        }
     }
 
     /**
      * 移除悬停效果
      */
-    static removeHoverEffect(sprite, config) {
+    static removeHoverEffect(sprite, card, config) {
         const { visual } = config;
         const state = visual.unlocked;
 
         sprite.setScale(state.scale);
         sprite.setStrokeStyle(state.strokeWidth, state.strokeColor);
+
+        // 图片也恢复正常状态
+        if (card && card.image) {
+            card.image.setTint(state.imageTint);
+            card.image.setAlpha(state.imageAlpha);
+        }
     }
 }

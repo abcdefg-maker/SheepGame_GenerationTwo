@@ -128,8 +128,19 @@ const gameConfig = {
         gridSize: 8,                    // 8x8棋盘
 
         // 卡牌类型
-        cardTypeCount: 3,               // 卡牌类型数量
-        cardTypes: ['🐑', '🐄', '🐷'],   // 卡牌类型
+        cardTypeCount: 6,               // 卡牌类型数量
+        cardTypes: [
+            { id: 'sheep', emoji: '🐑', image: 'card_01.png' },
+            { id: 'cow',   emoji: '🐄', image: 'card_02.png' },
+            { id: 'pig',   emoji: '🐷', image: 'card_03.png' },
+            { id: 'dog',   emoji: '🐶', image: 'card_04.png' },
+            { id: 'cat',   emoji: '🐱', image: 'card_05.png' },
+            { id: 'rabbit',emoji: '🐰', image: 'card_06.png' }
+        ],
+
+        // 图片配置
+        cardImagePath: 'src/images/cards/',  // 图片路径前缀
+        cardImageScale: 0.5,              // 图片缩放比例(根据实际尺寸调整)
 
         // 卡牌尺寸 (黄金分割比 1:1.618)
         cardWidth: 60,                  // 宽度(短边)
@@ -152,11 +163,13 @@ const gameConfig = {
         visual: {
             // 被锁状态
             locked: {
-                alpha: 0.6,
-                scale: 0.95,
-                tint: 0xCCCCCC,
+                alpha: 0.5,              // 更透明
+                scale: 0.9,              // 更小
+                tint: 0xAAAAAA,          // 更深的灰色背景
                 strokeWidth: 2,
-                strokeColor: 0x999999
+                strokeColor: 0x666666,   // 更深的边框
+                imageTint: 0x888888,     // 图片灰色滤镜
+                imageAlpha: 0.4          // 图片更透明
             },
             // 解锁状态
             unlocked: {
@@ -164,7 +177,9 @@ const gameConfig = {
                 scale: 1.0,
                 tint: 0xFFFFFF,
                 strokeWidth: 3,
-                strokeColor: 0xFFD700
+                strokeColor: 0xFFD700,   // 金色边框
+                imageTint: 0xFFFFFF,     // 图片正常颜色
+                imageAlpha: 1.0          // 图片不透明
             },
             // 悬停状态
             hover: {
@@ -172,7 +187,9 @@ const gameConfig = {
                 scale: 1.05,
                 tint: 0xFFFFFF,
                 strokeWidth: 4,
-                strokeColor: 0x00FF00
+                strokeColor: 0x00FF00,   // 绿色边框
+                imageTint: 0xFFFFFF,
+                imageAlpha: 1.0
             }
         },
 
@@ -190,14 +207,16 @@ const gameConfig = {
 
     // 关卡难度配置
     levels: [
-        { level: 1, layerCount: 3, gridSize: 6, cardTypes: 2, name: '简单' },
-        { level: 2, layerCount: 4, gridSize: 6, cardTypes: 3, name: '简单' },
-        { level: 3, layerCount: 5, gridSize: 7, cardTypes: 3, name: '普通' },
-        { level: 4, layerCount: 6, gridSize: 7, cardTypes: 3, name: '普通' },
-        { level: 5, layerCount: 7, gridSize: 8, cardTypes: 3, name: '困难' },
-        { level: 6, layerCount: 8, gridSize: 8, cardTypes: 4, name: '困难' },
-        { level: 7, layerCount: 9, gridSize: 8, cardTypes: 4, name: '极难' },
-        { level: 8, layerCount: 10, gridSize: 8, cardTypes: 4, name: '极难' }
+        { level: 1, layerCount: 3, gridSize: 5, cardTypes: 3, name: '入门' },
+        { level: 2, layerCount: 4, gridSize: 5, cardTypes: 3, name: '简单' },
+        { level: 3, layerCount: 5, gridSize: 6, cardTypes: 4, name: '简单' },
+        { level: 4, layerCount: 6, gridSize: 6, cardTypes: 4, name: '普通' },
+        { level: 5, layerCount: 7, gridSize: 7, cardTypes: 4, name: '普通' },
+        { level: 6, layerCount: 8, gridSize: 7, cardTypes: 5, name: '困难' },
+        { level: 7, layerCount: 9, gridSize: 8, cardTypes: 5, name: '困难' },
+        { level: 8, layerCount: 10, gridSize: 8, cardTypes: 5, name: '挑战' },
+        { level: 9, layerCount: 11, gridSize: 8, cardTypes: 6, name: '挑战' },
+        { level: 10, layerCount: 12, gridSize: 8, cardTypes: 6, name: '极难' }
     ],
 
     // 消除区域配置
@@ -210,6 +229,13 @@ const gameConfig = {
         slotBackground: 0xFFEBCD,       // 槽位背景色
         slotBorder: 0xFF9800,           // 槽位边框色
         slotBorderWidth: 2              // 槽位边框宽度
+    },
+
+    // 计分系统配置
+    scoring: {
+        eliminationBonus: 100,          // 每次消除3张卡牌的得分
+        comboMultiplier: 1.5,           // 连消倍数(预留)
+        perfectClearBonus: 1000         // 完美通关奖励(预留)
     }
 };
 

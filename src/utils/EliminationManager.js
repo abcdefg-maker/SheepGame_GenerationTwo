@@ -15,8 +15,12 @@ export default class EliminationManager {
         const activeCards = slots.filter(c => !c.isRemoved);
         const actualIndex = activeCards.length;
 
+        const cardTypeDisplay = typeof card.cardType === 'string'
+            ? card.cardType
+            : `${card.cardType.emoji}(${card.cardType.id})`;
+
         console.log('[消除] 添加卡牌到槽位:', {
-            cardType: card.cardType,
+            cardType: cardTypeDisplay,
             槽位总数: slots.length,
             有效槽位数: actualIndex,
             最大容量: elimination.maxSlots
@@ -94,16 +98,25 @@ export default class EliminationManager {
         const slots = scene.eliminationSlots;
         const { elimination } = config;
 
+        // 辅助函数：获取卡牌类型的唯一标识
+        const getCardTypeKey = (cardType) => {
+            return typeof cardType === 'string' ? cardType : cardType.id;
+        };
+
         console.log('[消除] 开始检查消除，当前槽位:', {
             槽位总数: slots.length,
-            卡牌列表: slots.map(c => ({ type: c.cardType, isRemoved: c.isRemoved }))
+            卡牌列表: slots.map(c => ({
+                type: typeof c.cardType === 'string' ? c.cardType : c.cardType.id,
+                isRemoved: c.isRemoved
+            }))
         });
 
         // 统计每种类型的卡牌
         const typeCount = {};
         slots.forEach(card => {
             if (!card.isRemoved) {
-                typeCount[card.cardType] = (typeCount[card.cardType] || 0) + 1;
+                const key = getCardTypeKey(card.cardType);
+                typeCount[key] = (typeCount[key] || 0) + 1;
             }
         });
 
@@ -129,7 +142,7 @@ export default class EliminationManager {
         // 找出要消除的卡牌
         const cardsToEliminate = [];
         for (const card of slots) {
-            if (!card.isRemoved && card.cardType === eliminatedType) {
+            if (!card.isRemoved && getCardTypeKey(card.cardType) === eliminatedType) {
                 cardsToEliminate.push(card);
                 if (cardsToEliminate.length >= elimination.matchCount) {
                     break;
@@ -189,6 +202,12 @@ export default class EliminationManager {
 
         // 消除完成后重新排列
         scene.time.delayedCall(cardConfig.cardAnimation.eliminateDuration + 100, () => {
+            // 增加分数 (每消除3张卡牌得100分)
+            const points = config.scoring?.eliminationBonus || 100;
+            if (scene.updateScore) {
+                scene.updateScore(points);
+            }
+
             this.rearrangeSlots(scene, config);
         });
     }
@@ -277,7 +296,8 @@ export default class EliminationManager {
             scene.time.delayedCall(500, () => {
                 scene.scene.start('GameOverScene', {
                     level: scene.currentLevel,
-                    win: true,
+                    isWin: true,
+                    score: scene.score || 0,
                     message: '恭喜通关!'
                 });
             });
@@ -301,7 +321,8 @@ export default class EliminationManager {
                 scene.time.delayedCall(500, () => {
                     scene.scene.start('GameOverScene', {
                         level: scene.currentLevel,
-                        win: false,
+                        isWin: false,
+                        score: scene.score || 0,
                         message: '消除槽已满,游戏失败!'
                     });
                 });
@@ -319,9 +340,15 @@ export default class EliminationManager {
         const { elimination } = config;
         const typeCount = {};
 
+        // 辅助函数：获取卡牌类型的唯一标识
+        const getCardTypeKey = (cardType) => {
+            return typeof cardType === 'string' ? cardType : cardType.id;
+        };
+
         slots.forEach(card => {
             if (!card.isRemoved) {
-                typeCount[card.cardType] = (typeCount[card.cardType] || 0) + 1;
+                const key = getCardTypeKey(card.cardType);
+                typeCount[key] = (typeCount[key] || 0) + 1;
             }
         });
 

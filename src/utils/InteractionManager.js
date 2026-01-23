@@ -14,14 +14,14 @@ export default class InteractionManager {
         // 悬停进入
         sprite.on('pointerover', () => {
             if (card.lockCount === 0 && !card.isRemoved) {
-                CardRenderer.applyHoverEffect(sprite, config);
+                CardRenderer.applyHoverEffect(sprite, card, config);
             }
         });
 
         // 悬停离开
         sprite.on('pointerout', () => {
             if (card.lockCount === 0 && !card.isRemoved) {
-                CardRenderer.removeHoverEffect(sprite, config);
+                CardRenderer.removeHoverEffect(sprite, card, config);
             }
         });
 
@@ -60,11 +60,8 @@ export default class InteractionManager {
             // 完全解锁,浮到顶层
             CardRenderer.floatCardToTop(scene, card, config);
         } else {
-            // 部分解锁,更新视觉(透明度略微提升)
-            const baseAlpha = config.visual.locked.alpha;
-            const unlockProgress = 1 - (card.lockCount / 5);
-            const alpha = baseAlpha + (1 - baseAlpha) * unlockProgress;
-            card.sprite.setAlpha(Math.min(alpha, 1.0));
+            // 仍然被锁,保持灰色状态（使用CardRenderer统一更新）
+            CardRenderer.updateCardVisual(card, card.sprite, config);
         }
     }
 
