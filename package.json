@@ -1,0 +1,21 @@
+{
+  "name": "sheep-game-generation2",
+  "version": "1.0.0",
+  "description": "Phaser 3 游戏项目",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["phaser", "phaser3", "game"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "phaser": "^3.80.1"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
