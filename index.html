@@ -2,38 +2,44 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Sheep Game Generation 2</title>
+    <link rel="stylesheet" href="ad-component/ad-banner.css">
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #2d2d2d;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #2d2d2d;
+        }
+        /* 主容器：包含游戏和广告 */
+        #main-wrapper {
+            position: relative;
+            transform-origin: center center;
         }
         #game-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: relative;
         }
     </style>
 </head>
 <body>
-    <div id="game-container"></div>
-    <script type="module" src="/src/main.js"></script>
-</body>
+    <!-- 主容器：包含游戏画布和广告 -->
+    <div id="main-wrapper">
+        <div id="game-container"></div>
+        <div id="ad-banner-container"></div>
+    </div>
 
-<head>
-    <link rel="stylesheet" href="ad-component/ad-banner.css">
-</head>
-<body>
-    <!-- 添加广告容器 -->
-    <div id="ad-banner-container"></div>
-    
-    <!-- 在页面底部引入脚本 -->
+    <!-- 游戏主脚本 -->
+    <script type="module" src="/src/main.js"></script>
+
+    <!-- 广告组件脚本 -->
     <script src="ad-component/ad-banner.js"></script>
     <script>
         var adBanner = new AdBanner({
