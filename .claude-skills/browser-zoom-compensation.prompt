@@ -1,0 +1,106 @@
+# Skill: Browser Zoom Compensation
+
+## Quick Start Command
+"为这个项目添加浏览器缩放补偿功能"
+
+## What This Skill Does
+自动重构HTML和JavaScript，实现浏览器缩放补偿，使游戏界面在Ctrl+/-缩放时保持物理尺寸不变。
+
+## Execution Steps
+
+1. **分析项目结构**
+   - 定位HTML入口文件 (index.html)
+   - 定位主JavaScript文件 (main.js)
+   - 识别游戏容器ID和广告容器ID
+
+2. **重构HTML** (index.html)
+   - 创建 `#main-wrapper` 统一父容器
+   - 将游戏容器和广告容器移入 `main-wrapper`
+   - 添加必要的CSS样式：
+     ```css
+     #main-wrapper {
+         position: relative;
+         transform-origin: center center;
+     }
+     ```
+   - 添加 `user-scalable=no` 到 viewport meta
+
+3. **添加缩放补偿代码** (main.js末尾)
+   - 添加 `baseDevicePixelRatio` 变量
+   - 实现 `compensateBrowserZoom()` 函数
+   - 添加4个事件监听器：
+     - DOMContentLoaded (初始化)
+     - resize (窗口变化)
+     - wheel (Ctrl+滚轮)
+     - matchMedia (DPR变化)
+
+4. **验证和测试**
+   - 确认 main-wrapper 元素存在
+   - 检查控制台是否有错误
+   - 输出测试提示信息
+
+## Key Code Template
+
+### HTML Structure
+```html
+<div id="main-wrapper">
+    <div id="game-container"></div>
+    <div id="ad-banner-container"></div>
+</div>
+```
+
+### JavaScript Core
+```javascript
+let baseDevicePixelRatio = window.devicePixelRatio || 1;
+
+function compensateBrowserZoom() {
+    const mainWrapper = document.getElementById('main-wrapper');
+    if (!mainWrapper) return;
+
+    const currentDPR = window.devicePixelRatio || 1;
+    const browserZoomLevel = currentDPR / baseDevicePixelRatio;
+    const compensationScale = 1 / browserZoomLevel;
+
+    mainWrapper.style.transform = `scale(${compensationScale})`;
+    mainWrapper.style.transformOrigin = 'center center';
+}
+
+// Event listeners...
+```
+
+## Important Notes
+
+- ✅ 使用 `devicePixelRatio` 而非 `innerWidth/outerWidth`
+- ✅ 对父容器缩放，不要单独缩放canvas
+- ✅ 添加防抖机制 (resize: 100ms, wheel: 50ms)
+- ✅ 保持 `transform-origin: center center`
+- ⚠️ 确保所有需要同步缩放的元素都在 main-wrapper 内
+- ⚠️ 不要修改游戏引擎的内部缩放配置
+
+## Success Criteria
+
+- [ ] HTML包含 main-wrapper 容器
+- [ ] 游戏和广告在同一父容器
+- [ ] compensateBrowserZoom 函数已添加
+- [ ] 4个事件监听器已注册
+- [ ] 控制台输出 [缩放补偿] 日志
+- [ ] Ctrl+/- 测试通过
+
+## Usage Example
+
+**User**: "为这个Phaser游戏添加浏览器缩放补偿"
+
+**Assistant**:
+1. 读取 index.html
+2. 读取 src/main.js
+3. 重构 HTML 结构
+4. 添加缩放补偿代码
+5. 输出测试指南
+
+## Skill Metadata
+
+- **Category**: Web Development / Game Development
+- **Difficulty**: Intermediate
+- **Time**: 5-10 minutes
+- **Dependencies**: None
+- **Browser Support**: Chrome, Firefox, Safari, Edge
