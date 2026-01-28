@@ -263,6 +263,17 @@ export default class EliminationManager {
 
         // 检查胜利条件
         this.checkWinCondition(scene);
+
+        // 检查失败条件：如果槽位满了且无法消除
+        if (remainingCards.length >= config.elimination.maxSlots) {
+            console.log('[消除] 消除后槽位仍满，检查是否有可消除组合');
+            const canEliminate = this.canEliminateAny(remainingCards, config);
+
+            if (!canEliminate) {
+                console.log('[消除] 无可消除组合，游戏失败');
+                this.checkLoseCondition(scene);
+            }
+        }
     }
 
     /**
@@ -298,16 +309,180 @@ export default class EliminationManager {
 
         if (slotsEmpty && !hasRemainingCards) {
             // 胜利
-            console.log('[消除] 游戏胜利！');
-            scene.time.delayedCall(500, () => {
-                scene.scene.start('GameOverScene', {
-                    level: scene.currentLevel,
-                    isWin: true,
-                    score: scene.score || 0,
-                    message: '恭喜通关!'
+            console.log('[消除] 关卡完成！');
+
+            // 获取配置
+            const config = scene.registry.get('config');
+            const currentLevel = scene.currentLevel;
+            const maxLevel = config.levels.length;  // 10
+            const hasNextLevel = currentLevel < maxLevel;
+
+            if (hasNextLevel) {
+                // 有下一关：执行关卡切换动画
+                const nextLevel = currentLevel + 1;
+                console.log(`[消除] 准备进入第${nextLevel}关`);
+
+                scene.time.delayedCall(500, () => {
+                    this.transitionToNextLevel(scene, nextLevel, config);
                 });
-            });
+            } else {
+                // 最后一关：进入胜利界面
+                console.log('[消除] 已通关所有关卡！');
+                scene.time.delayedCall(500, () => {
+                    scene.scene.start('GameOverScene', {
+                        level: currentLevel,
+                        difficulty: scene.difficulty,
+                        isWin: true,
+                        score: scene.score || 0,
+                        message: 'Congratulations! All levels completed!'
+                    });
+                });
+            }
         }
+    }
+
+    /**
+     * 关卡切换动画并进入下一关
+     * @param {Phaser.Scene} scene - 当前场景
+     * @param {number} nextLevel - 下一关卡号
+     * @param {object} config - 游戏配置对象
+     */
+    static transitionToNextLevel(scene, nextLevel, config) {
+        const camera = scene.cameras.main;
+        const width = camera.width;
+        const height = camera.height;
+
+        // 1. 创建黑色遮罩并淡入
+        const blackOverlay = scene.add.rectangle(0, 0, width, height, 0x000000, 0);
+        blackOverlay.setOrigin(0);
+        blackOverlay.setDepth(99999);  // 在所有元素之上，但低于提示层
+
+        // 淡入黑色遮罩（800ms）
+        scene.tweens.add({
+            targets: blackOverlay,
+            alpha: 1,
+            duration: 800,
+            ease: 'Power2',
+            onComplete: () => {
+                // 2. 黑屏完成后，显示关卡提示
+                this.showLevelTransitionHint(scene, nextLevel);
+
+                // 3. 等待提示动画完成后切换场景（400ms弹出 + 300ms保持 + 300ms淡出）
+                scene.time.delayedCall(1000, () => {
+                    console.log(`[场景切换] 启动第${nextLevel}关`);
+
+                    // 启动下一关（每关分数重置）
+                    scene.scene.start('GameScene', {
+                        level: nextLevel,
+                        difficulty: scene.difficulty,
+                        score: 0  // 每关重置分数
+                    });
+                });
+            }
+        });
+    }
+
+    /**
+     * 显示关卡过渡提示
+     * @param {Phaser.Scene} scene - 当前场景
+     * @param {number} nextLevel - 下一关卡号
+     */
+    static showLevelTransitionHint(scene, nextLevel) {
+        const camera = scene.cameras.main;
+        const width = camera.width;
+        const height = camera.height;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        // 获取关卡名称
+        const config = scene.registry.get('config');
+        const levelConfig = config.levels.find(l => l.level === nextLevel);
+        const levelName = levelConfig ? levelConfig.name : '';
+
+        // 主标题：关卡号
+        const levelText = scene.add.text(centerX, centerY - 30, `Level ${nextLevel}`, {
+            fontSize: '72px',
+            color: '#FFFFFF',
+            fontFamily: config.fonts.primary,
+            fontStyle: 'bold'
+        });
+        levelText.setOrigin(0.5);
+        levelText.setDepth(100001);
+        levelText.setShadow(4, 4, '#000000', 10);
+
+        // 副标题：难度名称
+        const difficultyText = scene.add.text(centerX, centerY + 50, levelName, {
+            fontSize: '36px',
+            color: '#FFD700',
+            fontFamily: config.fonts.primary,
+            fontStyle: 'bold'
+        });
+        difficultyText.setOrigin(0.5);
+        difficultyText.setDepth(100001);
+        difficultyText.setShadow(2, 2, '#000000', 5);
+
+        // 动画：缩放弹出效果
+        scene.tweens.add({
+            targets: [levelText, difficultyText],
+            scale: { from: 0, to: 1.2 },
+            alpha: { from: 0, to: 1 },
+            duration: 400,
+            ease: 'Back.easeOut',  // 符合现有卡牌动画风格
+            onComplete: () => {
+                // 保持显示300ms后淡出
+                scene.time.delayedCall(300, () => {
+                    scene.tweens.add({
+                        targets: [levelText, difficultyText],
+                        alpha: 0,
+                        duration: 300,
+                        ease: 'Power2'
+                    });
+                });
+            }
+        });
+    }
+
+    /**
+     * 检查新卡牌能否与槽位中的卡牌消除
+     * @param {object} card - 待检查的卡牌
+     * @param {Array} slots - 当前槽位中的卡牌数组
+     * @param {object} config - 游戏配置
+     * @returns {boolean} 是否可以消除
+     */
+    static canEliminateWithNewCard(card, slots, config) {
+        const { elimination } = config;
+
+        // 辅助函数：获取卡牌类型的唯一标识
+        const getCardTypeKey = (cardType) => {
+            return typeof cardType === 'string' ? cardType : cardType.id;
+        };
+
+        const newCardKey = getCardTypeKey(card.cardType);
+
+        console.log('[消除] 检查新卡牌能否消除:', {
+            新卡牌类型: newCardKey,
+            当前槽位数: slots.length
+        });
+
+        // 统计槽位中相同类型的卡牌数量
+        let count = 0;
+        for (const slotCard of slots) {
+            if (!slotCard.isRemoved && getCardTypeKey(slotCard.cardType) === newCardKey) {
+                count++;
+            }
+        }
+
+        // 加上新卡牌后是否达到消除数量
+        const canEliminate = (count + 1) >= elimination.matchCount;
+
+        console.log('[消除] 检查结果:', {
+            槽位中相同类型数量: count,
+            加上新卡牌后: count + 1,
+            需要数量: elimination.matchCount,
+            可以消除: canEliminate
+        });
+
+        return canEliminate;
     }
 
     /**

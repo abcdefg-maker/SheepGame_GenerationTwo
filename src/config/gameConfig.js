@@ -142,11 +142,12 @@ const gameConfig = {
 
         // 图片配置
         cardImagePath: 'src/images/cards/',  // 图片路径前缀
-        cardImageScale: 0.95,              // 图片缩放比例(根据实际尺寸调整)
+        cardImageScale: 0.8,              // 图片缩放比例(根据实际尺寸调整)
 
-        // 卡牌尺寸 (黄金分割比 1:1.618)
-        cardWidth: 60,                  // 宽度(短边)
-        cardHeight: 97,                 // 高度 = 60 * 1.618 ≈ 97
+        // 卡牌尺寸配置
+        cardWidth: 70,                  // 宽度(短边)
+        aspectRatio: 1,             // 长宽比 (高度/宽度) - 默认黄金分割比
+        // cardHeight 会基于 cardWidth * aspectRatio 自动计算
 
         // 层级配置
         layerCount: 10,                 // 总层数（默认值，会被关卡配置覆盖）
@@ -168,28 +169,28 @@ const gameConfig = {
                 alpha: 0.5,              // 更透明
                 scale: 0.9,              // 更小
                 tint: 0xAAAAAA,          // 更深的灰色背景
-                strokeWidth: 2,
-                strokeColor: 0x666666,   // 更深的边框
+                strokeWidth: 0,          // 无边框
+                strokeColor: 0x666666,
                 imageTint: 0x888888,     // 图片灰色滤镜
                 imageAlpha: 0.4          // 图片更透明
             },
             // 解锁状态
             unlocked: {
-                alpha: 1.0,
+                alpha: 0.0,              // 背景完全透明
                 scale: 1.0,
                 tint: 0xFFFFFF,
-                strokeWidth: 3,
-                strokeColor: 0xFFD700,   // 金色边框
+                strokeWidth: 0,          // 无边框
+                strokeColor: 0xFFFFFF,
                 imageTint: 0xFFFFFF,     // 图片正常颜色
                 imageAlpha: 1.0          // 图片不透明
             },
             // 悬停状态
             hover: {
-                alpha: 1.0,
+                alpha: 0.0,              // 背景完全透明
                 scale: 1.05,
                 tint: 0xFFFFFF,
-                strokeWidth: 4,
-                strokeColor: 0x00FF00,   // 绿色边框
+                strokeWidth: 0,          // 无边框
+                strokeColor: 0xFFFFFF,
                 imageTint: 0xFFFFFF,
                 imageAlpha: 1.0
             }
@@ -209,28 +210,33 @@ const gameConfig = {
 
     // 关卡难度配置
     levels: [
-        { level: 1, layerCount: 3, gridSize: 5, cardTypes: 3, name: '入门' },
-        { level: 2, layerCount: 4, gridSize: 5, cardTypes: 3, name: '简单' },
-        { level: 3, layerCount: 5, gridSize: 6, cardTypes: 4, name: '简单' },
-        { level: 4, layerCount: 6, gridSize: 6, cardTypes: 4, name: '普通' },
-        { level: 5, layerCount: 7, gridSize: 7, cardTypes: 4, name: '普通' },
-        { level: 6, layerCount: 8, gridSize: 7, cardTypes: 5, name: '困难' },
-        { level: 7, layerCount: 9, gridSize: 8, cardTypes: 5, name: '困难' },
-        { level: 8, layerCount: 10, gridSize: 8, cardTypes: 5, name: '挑战' },
-        { level: 9, layerCount: 11, gridSize: 8, cardTypes: 6, name: '挑战' },
-        { level: 10, layerCount: 12, gridSize: 8, cardTypes: 6, name: '极难' }
+        { level: 1, layerCount: 3, gridSize: 5, cardTypes: 3, name: 'Beginner' },
+        { level: 2, layerCount: 4, gridSize: 5, cardTypes: 3, name: 'Easy' },
+        { level: 3, layerCount: 5, gridSize: 6, cardTypes: 4, name: 'Easy' },
+        { level: 4, layerCount: 6, gridSize: 6, cardTypes: 4, name: 'Normal' },
+        { level: 5, layerCount: 7, gridSize: 7, cardTypes: 4, name: 'Normal' },
+        { level: 6, layerCount: 8, gridSize: 7, cardTypes: 5, name: 'Hard' },
+        { level: 7, layerCount: 9, gridSize: 8, cardTypes: 5, name: 'Hard' },
+        { level: 8, layerCount: 10, gridSize: 8, cardTypes: 5, name: 'Challenge' },
+        { level: 9, layerCount: 11, gridSize: 8, cardTypes: 6, name: 'Challenge' },
+        { level: 10, layerCount: 12, gridSize: 8, cardTypes: 6, name: 'Expert' }
     ],
 
     // 消除区域配置
     elimination: {
-        maxSlots: 8,                    // 消除槽最大容量
+        maxSlots: 7,                    // 消除槽最大容量
         slotWidth: 70,                  // 槽位宽度
-        slotHeight: 100,                // 槽位高度
-        slotSpacing: 5,                 // 槽位间距
+        slotHeight: 70,                 // 槽位高度 (1:1比例)
+        slotSpacing: 25,                // 槽位间距
         matchCount: 3,                  // 消除所需相同卡牌数量
         slotBackground: 0xFFEBCD,       // 槽位背景色
         slotBorder: 0xFF9800,           // 槽位边框色
-        slotBorderWidth: 2              // 槽位边框宽度
+        slotBorderWidth: 2,             // 槽位边框宽度
+
+        // 槽位位置微调参数（用于对齐背景图片）
+        offsetX: 5,                    // X轴偏移（负数向左，正数向右）
+        offsetY: 0,                     // Y轴偏移（负数向上，正数向下）
+        frameYRatio: 0.45               // Y位置比例（0-1之间，调整整体高度）
     },
 
     // 计分系统配置
@@ -240,5 +246,8 @@ const gameConfig = {
         perfectClearBonus: 1000         // 完美通关奖励(预留)
     }
 };
+
+// 基于长宽比自动计算卡牌高度
+gameConfig.card.cardHeight = Math.round(gameConfig.card.cardWidth * gameConfig.card.aspectRatio);
 
 export default gameConfig;

@@ -14,7 +14,7 @@ export default class GameScene extends Phaser.Scene {
     init(data) {
         // 接收从关卡选择场景传来的数据
         this.currentLevel = data.level || 1;
-        this.difficulty = data.difficulty || '简单';
+        this.difficulty = data.difficulty || 'Easy';
 
         // 获取关卡配置
         const levelConfig = gameConfig.levels.find(l => l.level === this.currentLevel) || gameConfig.levels[0];
@@ -42,6 +42,8 @@ export default class GameScene extends Phaser.Scene {
     preload() {
         // 预加载背景图片
         this.load.image('background', 'src/images/background/background_play.png');
+        this.load.image('background_select', 'src/images/background/background_select.png');
+        this.load.image('levelAndScore', 'src/images/background/LevelAndScore.png');
 
         // 预加载卡牌图片
         const { cardTypes, cardImagePath } = gameConfig.card;
@@ -84,22 +86,6 @@ export default class GameScene extends Phaser.Scene {
 
         // 消除区域
         this.createEliminationArea();
-
-        // 跳转到结束场景的按钮（放在消除区域底部）
-        const { eliminationArea } = layout.gameArea;
-        this.createButton(
-            centerX,
-            eliminationArea.y + eliminationArea.height - 60,
-            '结束游戏',
-            () => {
-                this.scene.start('GameOverScene', {
-                    level: this.currentLevel,
-                    difficulty: this.difficulty,
-                    score: this.score || 0,
-                    isWin: false
-                });
-            }
-        );
     }
 
     /**
@@ -157,18 +143,13 @@ export default class GameScene extends Phaser.Scene {
         const { selectionArea } = layout.gameArea;
         const { gridSize, cardWidth, cardHeight } = this.cardConfig;
 
-        // 计算可用区域（考虑偏移量，预留半个卡牌的空间）
-        const availableWidth = selectionArea.width - selectionArea.padding * 2 - cardWidth;
-        const availableHeight = selectionArea.height - 80 - selectionArea.padding - cardHeight; // 留出标题和底部空间
-
-        const cellSize = Math.min(
-            availableWidth / gridSize,
-            availableHeight / gridSize
-        );
+        // 让卡牌紧邻排列，格子大小等于卡牌大小
+        const cellWidth = cardWidth;
+        const cellHeight = cardHeight;
 
         // 计算起始位置(居中整个网格)
-        const gridTotalWidth = cellSize * gridSize;
-        const gridTotalHeight = cellSize * gridSize;
+        const gridTotalWidth = cellWidth * gridSize;
+        const gridTotalHeight = cellHeight * gridSize;
         const startX = selectionArea.x + (selectionArea.width - gridTotalWidth) / 2;
         const startY = selectionArea.y + 80 + (selectionArea.height - 80 - gridTotalHeight) / 2;
 
@@ -184,8 +165,8 @@ export default class GameScene extends Phaser.Scene {
                         continue;
                     }
 
-                    const baseX = startX + col * cellSize + cellSize / 2;
-                    const baseY = startY + row * cellSize + cellSize / 2;
+                    const baseX = startX + col * cellWidth + cellWidth / 2;
+                    const baseY = startY + row * cellHeight + cellHeight / 2;
 
                     const card = {
                         layerIndex: layer.layerIndex,
@@ -259,8 +240,8 @@ export default class GameScene extends Phaser.Scene {
         const added = EliminationManager.addCardToSlot(card, this, gameConfig);
 
         if (!added) {
-            // 槽位已满，游戏失败
-            console.log('[GameScene] 槽位已满，检查失败条件');
+            // 槽位已满（7张），游戏失败
+            console.log('[GameScene] 槽位已满，游戏失败');
             EliminationManager.checkLoseCondition(this);
             return;
         }
@@ -276,19 +257,13 @@ export default class GameScene extends Phaser.Scene {
             }
         });
 
-        // 4. 延迟检查消除（等待移动动画完成）
+        // 5. 延迟检查消除（等待移动动画完成）
         const delay = this.cardConfig.cardAnimation.moveToSlotDuration + 50;
         console.log('[GameScene] 延迟', delay, 'ms后检查消除');
         this.time.delayedCall(delay, () => {
             console.log('[GameScene] 延迟时间到，开始检查消除');
             // 检查并执行三张消除
-            const eliminated = EliminationManager.checkAndEliminate(this, gameConfig);
-
-            // 如果消除后槽位仍然满了，检查失败条件
-            if (!eliminated && this.eliminationSlots.length >= gameConfig.elimination.maxSlots) {
-                console.log('[GameScene] 未消除且槽位满，检查失败条件');
-                EliminationManager.checkLoseCondition(this);
-            }
+            EliminationManager.checkAndEliminate(this, gameConfig);
         });
     }
 
@@ -310,47 +285,51 @@ export default class GameScene extends Phaser.Scene {
     createInfoBar() {
         const { infoBar } = layout.gameArea;
 
-        // 信息栏背景
-        const bar = this.add.rectangle(
-            infoBar.x,
-            infoBar.y,
-            infoBar.width,
-            infoBar.height,
-            Phaser.Display.Color.HexStringToColor(gameConfig.colors.infoBar).color
+        // 使用 LevelAndScore.png 作为信息栏背景
+        const barImage = this.add.image(
+            infoBar.x + infoBar.width / 2,
+            infoBar.y + infoBar.height / 2,
+            'levelAndScore'
         );
-        bar.setOrigin(0);
+        barImage.setOrigin(0.5);
 
-        // 关卡信息
-        const levelText = this.add.text(30, 30, `关卡: ${this.currentLevel}`, {
-            fontSize: '28px',
-            color: '#FFFFFF',
+        // 缩放图片以适应信息栏区域
+        const scaleX = infoBar.width / barImage.width;
+        const scaleY = infoBar.height / barImage.height;
+        barImage.setScale(Math.min(scaleX, scaleY) * 0.9);
+
+        // 计算三个框的中心X坐标（基于图片比例）
+        const centerY = infoBar.y + infoBar.height / 2;
+        const leftFrameX = infoBar.x + infoBar.width * 0.17;
+        const middleFrameX = infoBar.x + infoBar.width * 0.5;
+        const rightFrameX = infoBar.x + infoBar.width * 0.83;
+
+        // 左框：Level（关卡）
+        const levelText = this.add.text(leftFrameX, centerY, `Level: ${this.currentLevel}`, {
+            fontSize: '24px',
+            color: '#000000',
             fontFamily: gameConfig.fonts.primary,
             fontStyle: 'bold'
         });
+        levelText.setOrigin(0.5);
 
-        // 难度信息
-        const difficultyText = this.add.text(30, 70, `难度: ${this.difficulty}`, {
+        // 中框：Difficulty（难度）
+        const difficultyText = this.add.text(middleFrameX, centerY, `Difficulty: \n ${this.difficulty}`, {
             fontSize: '24px',
-            color: '#FFFFFF',
-            fontFamily: gameConfig.fonts.primary
-        });
-
-        // 分数信息
-        this.scoreText = this.add.text(infoBar.width - 30, 30, '分数: 0', {
-            fontSize: '28px',
-            color: '#FFFFFF',
+            color: '#000000',
             fontFamily: gameConfig.fonts.primary,
             fontStyle: 'bold'
         });
-        this.scoreText.setOrigin(1, 0);
+        difficultyText.setOrigin(0.5);
 
-        // 时间信息
-        const timeText = this.add.text(infoBar.width - 30, 70, '时间: 00:00', {
+        // 右框：Score（分数）
+        this.scoreText = this.add.text(rightFrameX, centerY, 'Score: 0', {
             fontSize: '24px',
-            color: '#FFFFFF',
-            fontFamily: gameConfig.fonts.primary
+            color: '#000000',
+            fontFamily: gameConfig.fonts.primary,
+            fontStyle: 'bold'
         });
-        timeText.setOrigin(1, 0);
+        this.scoreText.setOrigin(0.5);
     }
 
     createSelectionArea() {
@@ -384,96 +363,68 @@ export default class GameScene extends Phaser.Scene {
         const { eliminationArea } = layout.gameArea;
         const { elimination } = gameConfig;
 
-        // 消除区域背景
-        const background = this.add.rectangle(
-            eliminationArea.x,
-            eliminationArea.y,
-            eliminationArea.width,
-            eliminationArea.height,
-            Phaser.Display.Color.HexStringToColor(gameConfig.colors.eliminationArea).color
-        );
-        background.setOrigin(0);
-
-        // 边框
-        const border = this.add.rectangle(
-            eliminationArea.x,
-            eliminationArea.y,
-            eliminationArea.width,
-            eliminationArea.height
-        );
-        border.setOrigin(0);
-        border.setStrokeStyle(3, Phaser.Display.Color.HexStringToColor(gameConfig.colors.areaBorder).color);
-        border.setFillStyle();
-
-        // 区域标题
-        const title = this.add.text(
+        // 消除区域背景（使用图片）
+        const background = this.add.image(
             eliminationArea.x + eliminationArea.width / 2,
-            eliminationArea.y + 20,
-            '消除区域 (0/8)',
-            {
-                fontSize: '32px',
-                color: '#333333',
-                fontFamily: gameConfig.fonts.primary,
-                fontStyle: 'bold'
-            }
+            eliminationArea.y + eliminationArea.height / 2,
+            'background_select'
         );
-        title.setOrigin(0.5, 0);
-        this.eliminationTitle = title; // 保存引用用于更新计数
+        background.setOrigin(0.5);
+
+        // 缩放图片以适应消除区域
+        const scaleX = eliminationArea.width / background.width;
+        const scaleY = eliminationArea.height / background.height;
+        background.setScale(Math.min(scaleX, scaleY) * 1.025);
+
+        // 保存背景引用供槽位对齐使用
+        this.eliminationBackground = background;
 
         // 创建消除槽位
         this.createEliminationSlots();
     }
 
     /**
-     * 创建消除槽位
+     * 创建消除槽位（显示红色边框，严格对齐背景图片）
      */
     createEliminationSlots() {
         const { eliminationArea } = layout.gameArea;
         const { elimination } = gameConfig;
 
+        // 从配置读取位置微调参数
+        const offsetX = elimination.offsetX;
+        const offsetY = elimination.offsetY;
+        const frameYRatio = elimination.frameYRatio;
+
         // 计算槽位总宽度
         const totalWidth = elimination.maxSlots * elimination.slotWidth +
                           (elimination.maxSlots - 1) * elimination.slotSpacing;
 
-        // 计算起始X位置（居中）
-        const startX = eliminationArea.x + (eliminationArea.width - totalWidth) / 2;
-        const slotY = eliminationArea.y + eliminationArea.height / 2 + 20;
+        // 计算起始X位置（居中 + 偏移）
+        const startX = eliminationArea.x + (eliminationArea.width - totalWidth) / 2 + offsetX;
 
-        // 创建8个槽位框
+        // 计算Y位置（对齐背景图片中的框 + 偏移）
+        const slotY = eliminationArea.y + eliminationArea.height * frameYRatio + offsetY;
+
+        // 创建8个槽位（带红色边框）
         for (let i = 0; i < elimination.maxSlots; i++) {
             const slotX = startX + i * (elimination.slotWidth + elimination.slotSpacing);
+            const centerX = slotX + elimination.slotWidth / 2;
 
-            // 槽位背景
-            const slotBg = this.add.rectangle(
-                slotX,
+            // 创建红色边框矩形
+            const border = this.add.rectangle(
+                centerX,
                 slotY,
                 elimination.slotWidth,
-                elimination.slotHeight,
-                elimination.slotBackground
+                elimination.slotHeight
             );
-            slotBg.setOrigin(0, 0.5);
-            slotBg.setStrokeStyle(elimination.slotBorderWidth, elimination.slotBorder);
-            slotBg.setAlpha(0.3);
-
-            // 槽位编号
-            const slotNumber = this.add.text(
-                slotX + elimination.slotWidth / 2,
-                slotY + elimination.slotHeight / 2 + 10,
-                `${i + 1}`,
-                {
-                    fontSize: '20px',
-                    color: '#999999',
-                    fontFamily: gameConfig.fonts.primary
-                }
-            );
-            slotNumber.setOrigin(0.5);
-            slotNumber.setAlpha(0.5);
+            border.setStrokeStyle(2, 0xFF0000);  // 红色边框，2px宽度
+            border.setFillStyle();  // 无填充，只有边框
+            border.setDepth(19000);  // 设置在卡牌下方
 
             this.slotSprites.push({
-                background: slotBg,
-                number: slotNumber,
-                x: slotX + elimination.slotWidth / 2,
-                y: slotY
+                x: centerX,
+                y: slotY,
+                border: border  // 保存边框引用
             });
         }
     }
@@ -530,7 +481,7 @@ export default class GameScene extends Phaser.Scene {
     updateScore(points) {
         this.score += points;
         if (this.scoreText) {
-            this.scoreText.setText(`分数: ${this.score}`);
+            this.scoreText.setText(`Score: ${this.score}`);
         }
         console.log('[GameScene] 分数更新:', this.score);
     }

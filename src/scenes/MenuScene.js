@@ -22,7 +22,7 @@ export default class MenuScene extends Phaser.Scene {
         background.setDisplaySize(width, height);
 
         // 游戏标题
-        const title = this.add.text(centerX, centerY - 200, '羊了个羊', {
+        const title = this.add.text(centerX, centerY - 200, 'Sheep Game', {
             fontSize: gameConfig.fonts.title.size + 'px',
             color: gameConfig.colors.text,
             fontFamily: gameConfig.fonts.primary,
@@ -32,17 +32,17 @@ export default class MenuScene extends Phaser.Scene {
         title.setShadow(2, 2, '#000000', 5);
 
         // 开始游戏按钮
-        const startButton = this.createButton(centerX, centerY, '开始游戏', () => {
+        const startButton = this.createButton(centerX, centerY, 'Start Game', () => {
             this.scene.start('LevelSelectScene');
         });
 
         // 设置按钮
-        const settingsButton = this.createButton(centerX, centerY + 100, '游戏设置', () => {
-            console.log('设置功能待实现');
+        const settingsButton = this.createButton(centerX, centerY + 100, 'Settings', () => {
+            console.log('Settings feature coming soon');
         });
 
         // 版本信息
-        this.add.text(centerX, height - 50, `版本 ${gameConfig.game.version}`, {
+        this.add.text(centerX, height - 50, `Version ${gameConfig.game.version}`, {
             fontSize: gameConfig.fonts.small.size + 'px',
             color: '#FFFFFF',
             fontFamily: gameConfig.fonts.primary

@@ -9,7 +9,7 @@ export default class GameOverScene extends Phaser.Scene {
     init(data) {
         // 接收游戏数据
         this.currentLevel = data.level || 1;
-        this.difficulty = data.difficulty || '简单';
+        this.difficulty = data.difficulty || 'Easy';
         this.finalScore = data.score || 0;
         this.isWin = data.isWin || false;
     }
@@ -32,7 +32,7 @@ export default class GameOverScene extends Phaser.Scene {
         this.add.rectangle(0, 0, width, height, 0x000000, 0.3).setOrigin(0);
 
         // 结果标题
-        const resultTitle = this.add.text(centerX, 200, this.isWin ? '恭喜过关！' : '游戏结束', {
+        const resultTitle = this.add.text(centerX, 200, this.isWin ? 'Victory!' : 'Game Over', {
             fontSize: '64px',
             color: '#FFFFFF',
             fontFamily: gameConfig.fonts.primary,
@@ -45,14 +45,14 @@ export default class GameOverScene extends Phaser.Scene {
         this.createStatsPanel(centerX, 400);
 
         // 按钮组
-        this.createButton(centerX - 160, height - 200, '重新开始', () => {
+        this.createButton(centerX - 160, height - 200, 'Restart', () => {
             this.scene.start('GameScene', {
                 level: this.currentLevel,
                 difficulty: this.difficulty
             });
         }, 0xFF9800);
 
-        this.createButton(centerX + 160, height - 200, '返回菜单', () => {
+        this.createButton(centerX + 160, height - 200, 'Back to Menu', () => {
             this.scene.start('MenuScene');
         }, 0x2196F3);
 
@@ -78,7 +78,7 @@ export default class GameOverScene extends Phaser.Scene {
         const lineHeight = 80;
 
         // 关卡信息
-        this.add.text(x, statsY, `关卡: ${this.currentLevel}`, {
+        this.add.text(x, statsY, `Level: ${this.currentLevel}`, {
             fontSize: '32px',
             color: '#333333',
             fontFamily: gameConfig.fonts.primary,
@@ -86,7 +86,7 @@ export default class GameOverScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // 难度信息
-        this.add.text(x, statsY + lineHeight, `难度: ${this.difficulty}`, {
+        this.add.text(x, statsY + lineHeight, `Difficulty: ${this.difficulty}`, {
             fontSize: '32px',
             color: '#333333',
             fontFamily: gameConfig.fonts.primary,
@@ -94,7 +94,7 @@ export default class GameOverScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // 分数信息
-        this.add.text(x, statsY + lineHeight * 2, `得分: ${this.finalScore}`, {
+        this.add.text(x, statsY + lineHeight * 2, `Score: ${this.finalScore}`, {
             fontSize: '32px',
             color: '#333333',
             fontFamily: gameConfig.fonts.primary,
@@ -102,7 +102,7 @@ export default class GameOverScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // 状态信息
-        const statusText = this.isWin ? '胜利 ✓' : '失败 ✗';
+        const statusText = this.isWin ? 'Victory ✓' : 'Failed ✗';
         const statusColor = this.isWin ? '#4CAF50' : '#F44336';
         this.add.text(x, statsY + lineHeight * 3, statusText, {
             fontSize: '36px',

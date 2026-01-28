@@ -21,7 +21,7 @@ export default class LevelSelectScene extends Phaser.Scene {
         background.setDisplaySize(width, height);
 
         // 标题
-        const title = this.add.text(centerX, 100, '选择关卡', {
+        const title = this.add.text(centerX, 100, 'Select Level', {
             fontSize: '48px',
             color: gameConfig.colors.text,
             fontFamily: gameConfig.fonts.primary,
@@ -52,7 +52,7 @@ export default class LevelSelectScene extends Phaser.Scene {
             this.createLevelButton(
                 x,
                 y,
-                `关卡 ${levelConfig.level}`,
+                `Level ${levelConfig.level}`,
                 levelConfig.name,
                 levelConfig.level,
                 buttonWidth,
@@ -61,7 +61,7 @@ export default class LevelSelectScene extends Phaser.Scene {
         });
 
         // 返回按钮（放在关卡按钮下方）
-        this.createButton(centerX, 500, '返回菜单', () => {
+        this.createButton(centerX, 500, 'Back to Menu', () => {
             this.scene.start('MenuScene');
         });
     }
@@ -70,12 +70,12 @@ export default class LevelSelectScene extends Phaser.Scene {
 
         // 按钮背景（根据难度选择颜色）
         const colors = {
-            '入门': 0x8BC34A,
-            '简单': 0x4CAF50,
-            '普通': 0xFF9800,
-            '困难': 0xF44336,
-            '挑战': 0x9C27B0,
-            '极难': 0x212121
+            'Beginner': 0x8BC34A,
+            'Easy': 0x4CAF50,
+            'Normal': 0xFF9800,
+            'Hard': 0xF44336,
+            'Challenge': 0x9C27B0,
+            'Expert': 0x212121
         };
         const button = this.add.rectangle(x, y, buttonWidth, buttonHeight, colors[difficulty] || 0x2196F3);
         button.setStrokeStyle(3, 0xFFFFFF);
