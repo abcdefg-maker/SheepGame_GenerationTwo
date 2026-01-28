@@ -16,53 +16,135 @@ export default class GameOverScene extends Phaser.Scene {
 
     preload() {
         // 预加载资源
-        this.load.image('background', 'src/images/background/background_play.png');
+        this.load.image('background_play', 'src/images/background/background_play.png');
+        this.load.image('slotIsFull', 'src/images/SlotIsFull.png');
+        this.load.image('retryButton', 'src/images/retryButton.png');
     }
 
     create() {
         const { width, height } = layout.game;
         const centerX = width / 2;
+        const centerY = height / 2;
 
         // 背景
-        const background = this.add.image(0, 0, 'background').setOrigin(0);
+        const background = this.add.image(0, 0, 'background_play').setOrigin(0);
         // 缩放背景以适应屏幕
         background.setDisplaySize(width, height);
 
         // 半透明遮罩
         this.add.rectangle(0, 0, width, height, 0x000000, 0.3).setOrigin(0);
 
-        // 结果标题
-        const resultTitle = this.add.text(centerX, 200, this.isWin ? 'Victory!' : 'Game Over', {
-            fontSize: '64px',
-            color: '#FFFFFF',
-            fontFamily: gameConfig.fonts.primary,
-            fontStyle: 'bold'
-        });
-        resultTitle.setOrigin(0.5);
-        resultTitle.setShadow(3, 3, '#000000', 8);
-
-        // 统计信息面板
-        this.createStatsPanel(centerX, 400);
-
-        // 按钮组
-        this.createButton(centerX - 160, height - 200, 'Restart', () => {
-            this.scene.start('GameScene', {
-                level: this.currentLevel,
-                difficulty: this.difficulty
+        if (this.isWin) {
+            // 胜利界面 - 保持原有设计
+            // 结果标题
+            const resultTitle = this.add.text(centerX, 200, 'Victory!', {
+                fontSize: '64px',
+                color: '#FFFFFF',
+                fontFamily: gameConfig.fonts.primary,
+                fontStyle: 'bold'
             });
-        }, 0xFF9800);
+            resultTitle.setOrigin(0.5);
+            resultTitle.setShadow(3, 3, '#000000', 8);
 
-        this.createButton(centerX + 160, height - 200, 'Back to Menu', () => {
-            this.scene.start('MenuScene');
-        }, 0x2196F3);
+            // 统计信息面板
+            this.createStatsPanel(centerX, 400);
 
-        // 添加入场动画
-        this.tweens.add({
-            targets: resultTitle,
-            scale: { from: 0, to: 1 },
-            duration: 500,
-            ease: 'Back.easeOut'
-        });
+            // 按钮组
+            this.createButton(centerX - 160, height - 200, 'Restart', () => {
+                this.scene.start('GameScene', {
+                    level: this.currentLevel,
+                    difficulty: this.difficulty
+                });
+            }, 0xFF9800);
+
+            this.createButton(centerX + 160, height - 200, 'Back to Menu', () => {
+                this.scene.start('MenuScene');
+            }, 0x2196F3);
+
+            // 添加入场动画
+            this.tweens.add({
+                targets: resultTitle,
+                scale: { from: 0, to: 1 },
+                duration: 500,
+                ease: 'Back.easeOut'
+            });
+        } else {
+            // 失败界面 - 新设计：显示 SlotIsFull.png 图片
+            // 显示失败图片（居中）
+            const slotIsFullImage = this.add.image(centerX, centerY - 50, 'slotIsFull');
+            slotIsFullImage.setOrigin(0.5);
+
+            // 根据屏幕尺寸调整图片大小（保持适当比例）
+            const maxWidth = width * 0.6;
+            const maxHeight = height * 0.5;
+            const scale = Math.min(maxWidth / slotIsFullImage.width, maxHeight / slotIsFullImage.height);
+            slotIsFullImage.setScale(scale);
+
+            // 计算图片实际显示的尺寸
+            const imageDisplayWidth = slotIsFullImage.width * scale;
+            const imageDisplayHeight = slotIsFullImage.height * scale;
+
+            // 在图片底部框内显示关卡和分数
+            // 根据图片布局，底部框大约在图片高度的85%位置
+            const textY = slotIsFullImage.y + imageDisplayHeight * 0.10;
+
+            // Level 文本（左侧，图片宽度的30%位置）
+            const levelTextX = slotIsFullImage.x - imageDisplayWidth * 0.12;
+            this.add.text(levelTextX, textY, `${this.currentLevel}`, {
+                fontSize: '28px',
+                color: '#000000',
+                fontFamily: gameConfig.fonts.primary,
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+
+            // Score 文本（右侧，图片宽度的70%位置，向右偏移10px）
+            const scoreTextX = slotIsFullImage.x + imageDisplayWidth * 0.15 + 40;
+            this.add.text(scoreTextX, textY, `${this.finalScore}`, {
+                fontSize: '28px',
+                color: '#000000',
+                fontFamily: gameConfig.fonts.primary,
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+
+            // 只保留一个居中的 Restart 按钮（放在图片下方）- 使用图片按钮
+            const retryButton = this.add.image(
+                centerX,
+                slotIsFullImage.y + imageDisplayHeight * 0.5 + 100,
+                'retryButton'
+            );
+            retryButton.setOrigin(0.5);
+
+            // 添加交互效果
+            retryButton.setInteractive({ useHandCursor: true });
+
+            retryButton.on('pointerover', () => {
+                retryButton.setScale(1.1);
+            });
+
+            retryButton.on('pointerout', () => {
+                retryButton.setScale(1.0);
+            });
+
+            retryButton.on('pointerdown', () => {
+                retryButton.setScale(0.95);
+            });
+
+            retryButton.on('pointerup', () => {
+                retryButton.setScale(1.1);
+                this.scene.start('GameScene', {
+                    level: this.currentLevel,
+                    difficulty: this.difficulty
+                });
+            });
+
+            // 添加入场动画
+            this.tweens.add({
+                targets: slotIsFullImage,
+                scale: { from: 0, to: scale },
+                duration: 500,
+                ease: 'Back.easeOut'
+            });
+        }
     }
 
     createStatsPanel(x, y) {

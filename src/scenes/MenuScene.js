@@ -8,7 +8,8 @@ export default class MenuScene extends Phaser.Scene {
 
     preload() {
         // 预加载资源
-        this.load.image('background', 'src/images/background/background_play.png');
+        this.load.image('background_start', 'src/images/background/background_start.png');
+        this.load.image('startButton', 'src/images/startButton.png');
     }
 
     create() {
@@ -17,28 +18,32 @@ export default class MenuScene extends Phaser.Scene {
         const centerY = height / 2;
 
         // 背景
-        const background = this.add.image(0, 0, 'background').setOrigin(0);
+        const background = this.add.image(0, 0, 'background_start').setOrigin(0);
         // 缩放背景以适应屏幕
         background.setDisplaySize(width, height);
 
-        // 游戏标题
-        const title = this.add.text(centerX, centerY - 200, 'Sheep Game', {
-            fontSize: gameConfig.fonts.title.size + 'px',
-            color: gameConfig.colors.text,
-            fontFamily: gameConfig.fonts.primary,
-            fontStyle: 'bold'
-        });
-        title.setOrigin(0.5);
-        title.setShadow(2, 2, '#000000', 5);
+        // 开始游戏按钮（使用图片）
+        const startButton = this.add.image(centerX, centerY, 'startButton');
+        startButton.setOrigin(0.5);
 
-        // 开始游戏按钮
-        const startButton = this.createButton(centerX, centerY, 'Start Game', () => {
+        // 添加交互效果
+        startButton.setInteractive({ useHandCursor: true });
+
+        startButton.on('pointerover', () => {
+            startButton.setScale(1.1);
+        });
+
+        startButton.on('pointerout', () => {
+            startButton.setScale(1.0);
+        });
+
+        startButton.on('pointerdown', () => {
+            startButton.setScale(0.95);
+        });
+
+        startButton.on('pointerup', () => {
+            startButton.setScale(1.1);
             this.scene.start('LevelSelectScene');
-        });
-
-        // 设置按钮
-        const settingsButton = this.createButton(centerX, centerY + 100, 'Settings', () => {
-            console.log('Settings feature coming soon');
         });
 
         // 版本信息

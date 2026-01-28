@@ -41,7 +41,7 @@ export default class GameScene extends Phaser.Scene {
 
     preload() {
         // 预加载背景图片
-        this.load.image('background', 'src/images/background/background_play.png');
+        this.load.image('background_play', 'src/images/background/background_play.png');
         this.load.image('background_select', 'src/images/background/background_select.png');
         this.load.image('levelAndScore', 'src/images/background/LevelAndScore.png');
 
@@ -71,7 +71,7 @@ export default class GameScene extends Phaser.Scene {
         const centerX = width / 2;
 
         // 背景
-        const background = this.add.image(0, 0, 'background').setOrigin(0);
+        const background = this.add.image(0, 0, 'background_play').setOrigin(0);
         // 缩放背景以适应屏幕
         background.setDisplaySize(width, height);
 
@@ -410,21 +410,11 @@ export default class GameScene extends Phaser.Scene {
             const slotX = startX + i * (elimination.slotWidth + elimination.slotSpacing);
             const centerX = slotX + elimination.slotWidth / 2;
 
-            // 创建红色边框矩形
-            const border = this.add.rectangle(
-                centerX,
-                slotY,
-                elimination.slotWidth,
-                elimination.slotHeight
-            );
-            border.setStrokeStyle(2, 0xFF0000);  // 红色边框，2px宽度
-            border.setFillStyle();  // 无填充，只有边框
-            border.setDepth(19000);  // 设置在卡牌下方
-
+            // 保存槽位坐标（不显示边框）
             this.slotSprites.push({
                 x: centerX,
                 y: slotY,
-                border: border  // 保存边框引用
+                border: null  // 不需要边框引用
             });
         }
     }

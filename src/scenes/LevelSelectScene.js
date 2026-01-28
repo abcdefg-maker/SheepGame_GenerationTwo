@@ -8,7 +8,7 @@ export default class LevelSelectScene extends Phaser.Scene {
 
     preload() {
         // 预加载资源
-        this.load.image('background', 'src/images/background/background_play.png');
+        this.load.image('background_play', 'src/images/background/background_play.png');
     }
 
     create() {
@@ -16,7 +16,7 @@ export default class LevelSelectScene extends Phaser.Scene {
         const centerX = width / 2;
 
         // 背景
-        const background = this.add.image(0, 0, 'background').setOrigin(0);
+        const background = this.add.image(0, 0, 'background_play').setOrigin(0);
         // 缩放背景以适应屏幕
         background.setDisplaySize(width, height);
 
