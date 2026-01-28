@@ -43,7 +43,8 @@ export default class MenuScene extends Phaser.Scene {
 
         startButton.on('pointerup', () => {
             startButton.setScale(1.1);
-            this.scene.start('LevelSelectScene');
+            // 直接进入第一关
+            this.scene.start('GameScene', { level: 1, difficulty: 'Beginner' });
         });
 
         // 版本信息
